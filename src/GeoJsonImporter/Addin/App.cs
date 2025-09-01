@@ -23,6 +23,20 @@ namespace GeoJsonImporter.Addin
             // Import Button zum Panel hinzufügen
             importPanel.AddItem(importButtonData);
 
+            // Setup Panel für Geodaten-Vorbereitung
+            RibbonPanel setupPanel = application.CreateRibbonPanel(tabName, "Setup");
+            
+            var utmGridButtonData = new PushButtonData(
+                "UtmGridSetup",
+                "UTM Grid\nSetup",
+                assemblyPath,
+                "GeoJsonImporter.Addin.Commands.UtmGridSetupCommand");
+                
+            utmGridButtonData.ToolTip = "Revit-File für Geodaten-Import vorbereiten";
+            utmGridButtonData.LongDescription = "Erstellt UTM-Koordinatensystem und Grid für präzisen Geodaten-Import";
+            
+            setupPanel.AddItem(utmGridButtonData);
+
             // Development Panel mit separaten Unload/Load Buttons
             RibbonPanel devPanel = application.CreateRibbonPanel(tabName, "Development");
             

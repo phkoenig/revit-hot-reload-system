@@ -12,6 +12,9 @@
     <OutputType>Library</OutputType>
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
+    
+    <!-- Version wird über Properties/AssemblyInfo.cs gesetzt -->
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,6 +35,22 @@
   <ItemGroup>
     <PackageReference Include="GeoJSON.Net" Version="1.4.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <!-- Exclude Work-DLL files and temp folder from Loader-DLL compilation -->
+  <ItemGroup>
+    <Compile Remove="src\GeoJsonImporter.Work\**" />
+    <EmbeddedResource Remove="src\GeoJsonImporter.Work\**" />
+    <None Remove="src\GeoJsonImporter.Work\**" />
+    <Content Remove="src\GeoJsonImporter.Work\**" />
+    <Page Remove="src\GeoJsonImporter.Work\**" />
+    <ApplicationDefinition Remove="src\GeoJsonImporter.Work\**" />
+    
+    <!-- Exclude temp folder -->
+    <Compile Remove="temp\**" />
+    <EmbeddedResource Remove="temp\**" />
+    <None Remove="temp\**" />
+    <Content Remove="temp\**" />
   </ItemGroup>
 
   <!-- Post-Build Events für automatisches Deployment -->

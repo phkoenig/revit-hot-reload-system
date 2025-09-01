@@ -7,6 +7,8 @@
     <LangVersion>latest</LangVersion>
     <OutputType>Library</OutputType>
     
+
+    
     <!-- Revit API Architecture Mismatch Warning unterdrücken -->
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     
@@ -20,8 +22,17 @@
     <OutputPath>..\..\WorkDll\</OutputPath>
     
     <!-- Assembly Info Einstellungen -->
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    
+    <!-- Versionsinformationen für Work-DLL -->
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
+    <Version>1.1.0</Version>
+    <Product>GeoJSON Importer Work-DLL</Product>
+    <Description>Hot Reload Work-DLL mit CefSharp für UTM Grid Setup und GeoJSON Import</Description>
+    <Company>Philip</Company>
+    <Copyright>© 2024 Philip</Copyright>
     
     <!-- Windows Forms und WPF Support -->
     <UseWindowsForms>true</UseWindowsForms>
@@ -43,10 +54,13 @@
     </Reference>
   </ItemGroup>
 
+  <!-- ✅ Einfache Package References ohne CefSharp -->
   <ItemGroup>
     <PackageReference Include="GeoJSON.Net" Version="1.4.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
+  
+
 
   <!-- Keine Referenz auf Hauptprojekt - Work-DLL muss unabhängig sein! -->
 </Project>

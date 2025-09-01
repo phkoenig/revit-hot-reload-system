@@ -180,6 +180,65 @@ namespace GeoJsonImporter.Addin.Commands
         }
 
         /// <summary>
+        /// Führt UTM Grid Setup Command in der Work-DLL aus
+        /// </summary>
+        public static Autodesk.Revit.UI.Result ExecuteUtmGridSetup(
+            Autodesk.Revit.UI.ExternalCommandData commandData, 
+            ref string message, 
+            Autodesk.Revit.DB.ElementSet elements)
+        {
+            try
+            {
+                HotReloadLogger.Info("🗺️ UTM Grid Setup Command aufgerufen");
+
+                // Work-DLL laden falls nicht geladen
+                if (!IsWorkDllLoaded())
+                {
+                    HotReloadLogger.Info("Work-DLL nicht geladen - lade automatisch...");
+                    if (!LoadWorkDll())
+                    {
+                        message = "Work-DLL konnte nicht geladen werden!";
+                        return Autodesk.Revit.UI.Result.Failed;
+                    }
+                }
+
+                // Work-DLL Assembly holen
+                var assembly = _workDllContext.Assemblies.FirstOrDefault();
+                if (assembly != null)
+                {
+                    // Nach UtmGridSetupWorkCommand suchen
+                    var commandType = assembly.GetTypes()
+                        .FirstOrDefault(t => t.Name == "UtmGridSetupWorkCommand");
+
+                    if (commandType != null)
+                    {
+                        HotReloadLogger.Info($"UtmGridSetupWorkCommand gefunden: {commandType.FullName}");
+                        
+                        var commandInstance = Activator.CreateInstance(commandType);
+                        var executeMethod = commandType.GetMethod("Execute");
+                        
+                        if (executeMethod != null)
+                        {
+                            HotReloadLogger.Info("Execute-Methode wird aufgerufen...");
+                            var result = executeMethod.Invoke(commandInstance, new object[] { commandData, message, elements });
+                            HotReloadLogger.Info($"UTM Grid Setup Command ausgeführt: {result}");
+                            return (Autodesk.Revit.UI.Result)result;
+                        }
+                    }
+                }
+
+                HotReloadLogger.Error("UtmGridSetupWorkCommand nicht gefunden in Work-DLL");
+                return Autodesk.Revit.UI.Result.Failed;
+            }
+            catch (Exception ex)
+            {
+                var realEx = ex.InnerException ?? ex;
+                HotReloadLogger.Error($"UTM Grid Setup Ausführung Fehler: {realEx.Message}", realEx);
+                return Autodesk.Revit.UI.Result.Failed;
+            }
+        }
+
+        /// <summary>
         /// Ermittelt den Pfad zur Work-DLL
         /// </summary>
         private static string GetWorkDllPath()
