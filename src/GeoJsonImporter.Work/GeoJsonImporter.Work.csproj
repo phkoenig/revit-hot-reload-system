@@ -37,6 +37,10 @@
     <!-- Windows Forms und WPF Support -->
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
+    
+    <!-- .NET 8.0 Runtime Dependencies korrekt auflösen -->
+    <SelfContained>false</SelfContained>
+    <PublishSingleFile>false</PublishSingleFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -59,8 +63,12 @@
     <PackageReference Include="GeoJSON.Net" Version="1.4.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
-  
-
 
   <!-- Keine Referenz auf Hauptprojekt - Work-DLL muss unabhängig sein! -->
+  
+  <!-- 🚨 Gesperrte Dateien ausschließen -->
+  <ItemGroup>
+    <Compile Remove="Commands\SetupCommand.cs" />
+    <Compile Remove="Commands\SetupCommand.cs.bak" />
+  </ItemGroup>
 </Project>

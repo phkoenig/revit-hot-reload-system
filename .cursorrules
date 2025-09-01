@@ -1,0 +1,89 @@
+# 🚨 KRITISCHE CURSOR RULES FÜR DIESES PROJEKT
+# GeoJSON Importer für Revit 2026 - Hot Reload System
+# ERSTELLT: 2024-12-19 (Funktionierende Architektur!)
+
+## 🔥 ARCHITEKTUR-REGELN (NIEMALS VERLETZEN!)
+
+### 🚨 KRITISCHE ARCHITEKTUR-REGEL (NIEMALS VERLETZEN!)
+
+**Die Loader-DLL (GeoJsonImporter.dll) ist NUR ein Dummy!**
+
+#### ✅ **RICHTIG - Loader-DLL (GeoJsonImporter.dll):**
+- **NUR Revit API Referenzen** (RevitAPI.dll, RevitAPIUI.dll)
+- **KEINE Package References** (kein GeoJSON.Net, kein Newtonsoft.Json!)
+- **NUR Dummy-Code:** App.cs, Proxy-Commands, WorkDllManager
+- **Kann NICHT ausgetauscht werden** (statisch in Revit geladen)
+
+#### ✅ **RICHTIG - Work-DLL (GeoJsonImporter.Work.dll):**
+- **ALLE Package References** (GeoJSON.Net, Newtonsoft.Json, etc.)
+- **ALLE echten Commands** (Business Logic)
+- **Kann zur Laufzeit ausgetauscht werden** (Hot Reload fähig)
+
+#### ❌ **FALSCH - NIEMALS TUN:**
+- **Package References in Loader-DLL hinzufügen** (zerstört Architektur!)
+- **Business Logic in Loader-DLL schreiben** (zerstört Hot Reload!)
+- **Work-DLL Referenzen in Loader-DLL** (verursacht "Klasse nicht gefunden")
+
+---
+
+## ✅ KORREKTE IMPLEMENTIERUNG (FUNKTIONIERT!)
+
+### Loader-DLL (GeoJsonImporter.csproj)
+```csharp
+// ✅ RICHTIG: UI-Management + Proxy-Commands + WorkDllManager
+App.cs → Alle Buttons zeigen auf "GeoJsonImporter.Addin.Commands.*"
+WorkDllManager → Bewährte Architektur (keine Änderungen!)
+Proxy-Commands → Delegieren an Work-DLL über WorkDllManager
+```
+
+### Work-DLL (GeoJsonImporter.Work.csproj)
+```csharp
+// ✅ RICHTIG: Alle echten Commands hier
+GeoRefWorkCommand.cs → Enthält echte GeoRef-Logik
+SetupWorkCommand.cs → Enthält echte Setup-Logik
+ImportGeoJsonWorkCommand.cs → Enthält echte Import-Logik
+Alle Business Logic hier!
+```
+
+## 🎯 HOT RELOAD WORKFLOW (FUNKTIONIERT!)
+
+### Bewährter Zyklus:
+1. **"Unload Work-DLL"** in Revit
+2. **Code in Work-DLL ändern**
+3. **Work-DLL neu bauen**
+4. **"Load Work-DLL"** in Revit
+5. **Command testen**
+
+### Architektur:
+```
+Revit → App.cs → Loader-DLL Proxy-Command → WorkDllManager → Work-DLL echte Commands
+  ↓         ↓              ↓                    ↓              ↓
+UI      Button    Loader-DLL (statisch)    Delegation    Business Logic (Hot Reload)
+```
+
+## 🚀 ZUKUNFTSSICHERUNG
+
+### Bei neuen Commands:
+1. **Echten Command in Work-DLL erstellen** (Business Logic)
+2. **Proxy-Command in Loader-DLL erstellen** (delegiert an Work-DLL)
+3. **Button in App.cs hinzufügen** (zeigt auf Loader-DLL Proxy-Command)
+4. **Bestehenden WorkDllManager nutzen** (ExecuteWorkCommand)
+
+### Bei Problemen:
+1. **Architektur prüfen** - sind alle Proxy-Commands in Loader-DLL?
+2. **App.cs prüfen** - zeigen alle Buttons auf Loader-DLL?
+3. **WorkDllManager prüfen** - wurde er verändert?
+4. **Hot Reload Workflow prüfen** - funktioniert er noch?
+
+## 🏆 FAZIT
+
+**DIESE ARCHITEKTUR FUNKTIONIERT UND DARF NIEMALS GEÄNDERT WERDEN!**
+
+- **Proxy-Commands in Loader-DLL** = Hot Reload funktioniert
+- **App.cs zeigt auf Loader-DLL** = Revit findet alle Commands
+- **Work-DLL kann ausgetauscht werden** = Hot Reload funktioniert
+- **Einfach, aber kritisch!**
+
+---
+*Erstellt nach der erfolgreichen Implementierung vom 19.12.2024*
+*"Proxy-Commands in Loader-DLL sind die korrekte Architektur!"*

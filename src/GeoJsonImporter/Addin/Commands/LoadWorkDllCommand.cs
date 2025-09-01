@@ -2,7 +2,6 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using System;
-using System.Windows.Forms;
 
 namespace GeoJsonImporter.Addin.Commands
 {
@@ -13,32 +12,25 @@ namespace GeoJsonImporter.Addin.Commands
         {
             try
             {
-                // Delegiere an den WorkDllManager für Load
+                // 🚀 Lade Work-DLL über WorkDllManager
                 bool success = WorkDllManager.LoadWorkDll();
                 
                 if (success)
                 {
-                    string version = WorkDllManager.GetWorkDllVersion();
-                    MessageBox.Show($"🚀 Work-DLL erfolgreich geladen!\n\n" +
-                        $"Version: {version}\n\n" +
-                        "Du kannst jetzt das Import Tool testen!", 
-                        "Work-DLL Load Erfolgreich", 
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    TaskDialog.Show("Hot Reload", "✅ Work-DLL erfolgreich geladen!");
                     return Result.Succeeded;
                 }
                 else
                 {
-                    MessageBox.Show("⚠️ Work-DLL Load Fehler!\n\n" +
-                        "Siehe Log für Details.", 
-                        "Work-DLL Load Fehler", 
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    message = "Fehler beim Laden der Work-DLL";
+                    TaskDialog.Show("Hot Reload Fehler", "❌ Work-DLL konnte nicht geladen werden!");
                     return Result.Failed;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"❌ Fehler beim Work-DLL Load:\n\n{ex.Message}", 
-                    "Load Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                message = $"LoadWorkDll Fehler: {ex.Message}";
+                TaskDialog.Show("LoadWorkDll Fehler", $"❌ Fehler beim Laden der Work-DLL:\n\n{ex.Message}");
                 return Result.Failed;
             }
         }

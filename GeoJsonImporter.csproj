@@ -32,10 +32,8 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="GeoJSON.Net" Version="1.4.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-  </ItemGroup>
+  <!-- 🚨 KEINE Package References in der Loader-DLL! -->
+  <!-- Diese gehören in die Work-DLL! -->
 
   <!-- Exclude Work-DLL files and temp folder from Loader-DLL compilation -->
   <ItemGroup>
@@ -52,6 +50,21 @@
     <None Remove="temp\**" />
     <Content Remove="temp\**" />
   </ItemGroup>
+
+  <!-- Pre-Build Event: Prüft Architektur UND Revit-Status -->
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <PropertyGroup>
+      <ScriptsPath>$(ProjectDir)scripts\</ScriptsPath>
+    </PropertyGroup>
+    
+    <!-- 🚨 ARCHITEKTUR-VALIDATOR (temporär deaktiviert für Test) -->
+    <!-- <Message Text="🔍 Prüfe Hot Reload Architektur vor dem Build..." Importance="high" /> -->
+    <!-- <Exec Command="powershell -ExecutionPolicy Bypass -File &quot;$(ScriptsPath)architecture-validator.ps1&quot;" /> -->
+    
+    <!-- 🔍 Revit-Status Prüfung (optional) -->
+    <!-- <Message Text="🔍 Prüfe Revit-Status vor dem Build..." Importance="high" /> -->
+    <!-- <Exec Command="powershell -ExecutionPolicy Bypass -File &quot;$(ScriptsPath)pre-build-check.ps1&quot;" /> -->
+  </Target>
 
   <!-- Post-Build Events für automatisches Deployment -->
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

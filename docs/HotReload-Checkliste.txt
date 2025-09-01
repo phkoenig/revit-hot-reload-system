@@ -1,65 +1,132 @@
-Hier ist eine umfassende Checkliste für Cursor.ai, um zu prüfen, ob der Loader-Ansatz zum Hot-Swapping von containerisierten DLLs in Revit korrekt implementiert ist. Die Liste hilft, typische Fehlerquellen zu identifizieren und zeigt, worauf bei einer funktionierenden Lösung zu achten ist.
+# 🚀 REVIT HOT RELOAD ARCHITEKTUR - CHECKLISTE
+# GeoJSON Importer - Hot Reload System
+# ERSTELLT: 2024-12-19 (Funktionierende Architektur!)
 
-Hot-Swap Loader-Architektur – Prüf- und Fehler-Checkliste
-1. Architektur-Validierung
-Wird ein separates Loader-Plugin als Dummy genutzt, das selbst keine nutzerseitige Logik enthält und immer von Revit geladen bleibt?
+## 🏗️ ARCHITEKTUR-ÜBERSICHT
 
-Ist die Hauptfunktionalität tatsächlich ausgelagert in eine „Arbeits-DLL“, die nur vom Loader dynamisch geladen wird?
+### 🚨 KRITISCHE ARCHITEKTUR-REGEL (NIEMALS VERLETZEN!)
 
-2. Container-Kontext
-Wird die Arbeits-DLL ausschließlich in einem AssemblyLoadContext mit aktiviertem Unload geladen (Parameter isCollectible: true)?
+**Die Loader-DLL (GeoJsonImporter.dll) ist NUR ein Dummy!**
 
-Besteht eine klare Trennung zwischen Loader und Arbeits-DLL hinsichtlich Abhängigkeiten und Verweisen?
+#### ✅ **RICHTIG - Loader-DLL (GeoJsonImporter.dll):**
+- **NUR Revit API Referenzen** (RevitAPI.dll, RevitAPIUI.dll)
+- **KEINE Package References** (kein GeoJSON.Net, kein Newtonsoft.Json!)
+- **NUR Dummy-Code:** App.cs, Proxy-Commands, WorkDllManager
+- **Kann NICHT ausgetauscht werden** (statisch in Revit geladen)
 
-3. Lade-/Wechsel-Logik
-Gibt es eine explizite Logik (z. B. Button, Command), die:
+#### ✅ **RICHTIG - Work-DLL (GeoJsonImporter.Work.dll):**
+- **ALLE Package References** (GeoJSON.Net, Newtonsoft.Json, etc.)
+- **ALLE echten Commands** (Business Logic)
+- **Kann zur Laufzeit ausgetauscht werden** (Hot Reload fähig)
 
-Den aktuellen Context/Arbeits-DLL entlädt (Unload + GC.Collect + GC.WaitForPendingFinalizers)?
+#### ❌ **FALSCH - NIEMALS TUN:**
+- **Package References in Loader-DLL hinzufügen** (zerstört Architektur!)
+- **Business Logic in Loader-DLL schreiben** (zerstört Hot Reload!)
+- **Work-DLL Referenzen in Loader-DLL** (verursacht "Klasse nicht gefunden")
 
-Die neue Arbeits-DLL prüft (Datum, Version) und dann lädt?
+---
 
-Wird wirklich versucht, die Arbeits-DLL zu laden/wechseln – oder wird weiterhin nur die Dummy-Loader-DLL neu gebaut/kopiert?
+### Loader-DLL (GeoJsonImporter.dll)
+- **Enthält:** UI-Management (App.cs) + Proxy-Commands + WorkDllManager + Load/Unload Commands
+- **Zweck:** Lädt Work-DLL und delegiert Commands
+- **Hot Reload:** Kann NICHT ausgetauscht werden
 
-4. Isolation & Ressourcen
-Hält der Loader keine Verweise (Events, Delegates, Objekte) zu der Arbeits-DLL, nachdem sie entladen werden soll?
+### Work-DLL (GeoJsonImporter.Work.dll)  
+- **Enthält:** Alle echten Commands (Business Logic)
+- **Zweck:** Implementiert die eigentliche Funktionalität
+- **Hot Reload:** Kann zur Laufzeit ausgetauscht werden
 
-Werden alle von der Arbeits-DLL allocierten Ressourcen vollständig disposed (inkl. UI, EventHandler, Streams)?
+## 🔄 HOT RELOAD WORKFLOW
 
-5. Kopierbarkeit & Überschreibbarkeit
-Kann die Arbeits-DLL nach Unload im Dateisystem frei überschrieben werden (kein Lock durch Revit oder Loader)?
+### 1. Entwicklung
+1. **Work-DLL Code ändern**
+2. **Work-DLL neu bauen**
+3. **"Unload Work-DLL" in Revit klicken**
+4. **"Load Work-DLL" in Revit klicken**
+5. **Neue Funktionalität testen**
 
-Bleibt die Loader-DLL dauerhaft im Speicher, aber fungiert nur als „Container“, nicht als reguläre Logik?
+### 2. Architektur
+```
+Revit → App.cs → Loader-DLL Proxy-Command → WorkDllManager → Work-DLL echte Commands
+  ↓         ↓              ↓                    ↓              ↓
+UI      Button    Loader-DLL (statisch)    Delegation    Business Logic (Hot Reload)
+```
 
-6. Sichtbarer Erfolg des Hot-Swap
-Nach einer Änderung und Build der Arbeits-DLL ? wird die neue Version beim Hot-Reload tatsächlich geladen und verwendet (z. B. neue MessageBox, Methoden)?
+## ✅ ARCHITEKTUR-SCHNELLCHECK
 
-Zeigt ein Debuginfo/Testmethoden (z. B. Zeitstempel/Version), dass die geladene Logik nach Hot-Swap wirklich neu ist?
+### 1. Loader-DLL (GeoJsonImporter.csproj)
+- [ ] Enthält: WorkDllManager.cs, LoadWorkDllCommand.cs, UnloadWorkDllCommand.cs
+- [ ] Enthält Proxy-Commands: AbracadabraCommand.cs, SetupCommand.cs, ImportGeoJsonCommand.cs
+- [ ] App.cs zeigt auf Loader-DLL Proxy-Commands
 
-Bleibt beim Versuch, die Dummy/Loader-DLL zu ersetzen, weiterhin ein Fehler/Lock im Dateisystem bestehen?
+### 2. Work-DLL (GeoJsonImporter.Work.csproj)
+- [ ] Enthält alle echten Commands: AbracadabraWorkCommand.cs, SetupWorkCommand.cs, ImportGeoJsonWorkCommand.cs
+- [ ] Keine Referenzen auf Loader-DLL
+- [ ] Alle Commands implementieren IExternalCommand
 
-7. Typische Fehlerquellen
-Loader hält noch Referenzen/Handles zu alter Arbeits-DLL ? DLL kann nicht entladen werden
+### 3. WorkDllManager
+- [ ] Lädt Work-DLL in AssemblyLoadContext
+- [ ] Delegiert Commands über spezifische Methoden (ExecuteAbracadabra, ExecuteWorkCommand)
+- [ ] Keine generischen Methoden mit commandName Parameter
 
-Arbeits-DLL wird nicht in einen „collectible“ Context geladen ? Unload funktioniert nicht
+## 🚨 VERBOTENE AKTIONEN
 
-Loader und Arbeits-DLL sind nicht ausreichend getrennt ? direkte Lock auf beide DLLs nach dem Load
+### ❌ NIEMALS:
+1. **App.cs zeigt direkt auf Work-DLL Commands** (verursacht "Klasse nicht gefunden")
+2. **WorkDllManager modifizieren** (neue generische Methoden)
+3. **Work-DLL referenziert Loader-DLL**
+4. **Generische ExecuteWorkCommand(string commandName, ...)** verwenden
 
-Kopierlogik zielt auf Dummy-Loader-DLL statt auf Arbeits-DLL (falscher Pfad, falscher Filehandle)
+### ✅ IMMER:
+1. **Proxy-Commands in Loader-DLL** für alle Funktionalität
+2. **Echte Commands in Work-DLL** implementieren
+3. **App.cs zeigt auf Loader-DLL Proxy-Commands**
+4. **Spezifische WorkDllManager-Methoden** verwenden
 
-Unvollständige Dispose-/Unload-Logik (Events, BackgroundWorker, Streams usw. bleiben aktiv)
+## 🔧 BEHEBUNG VON PROBLEMEN
 
-Nach Build wird versehentlich die Loader-DLL ersetzt/kopiert, anstatt die Arbeits-DLL im Container
+### "Klasse nicht gefunden" Fehler
+1. **Prüfe:** Ist Proxy-Command in Loader-DLL vorhanden?
+2. **Prüfe:** Zeigt App.cs auf den richtigen Proxy-Command?
+3. **Prüfe:** Ist Work-DLL erfolgreich geladen?
+4. **Prüfe:** Funktioniert WorkDllManager?
 
-Was Cursor.ai noch prüfen kann
-Werden beim Hot-Reload-Kontext Gültigkeit und Version der geladene DLL kontrolliert?
+### Hot Reload funktioniert nicht
+1. **Prüfe:** Sind Load/Unload Commands korrekt?
+2. **Prüfe:** Ist WorkDllManager unverändert?
+3. **Prüfe:** Sind alle Commands in der richtigen DLL?
 
-Ist die Dummy-Loader-DLL nach dem Build immer noch im Originalstatus – oder wird durch den Prozess ein Fehler/Missverständnis ausgelöst?
+## 📚 DATEI-STRUKTUR
 
-Gibt es ein Logging (z. B. Debug.Log), das zeigt, ob Kontext-Unload und Reload wirklich gelingt?
+### Loader-DLL
+```
+src/GeoJsonImporter/Addin/
+├── App.cs (zeigt auf Proxy-Commands)
+├── Commands/
+│   ├── WorkDllManager.cs
+│   ├── LoadWorkDllCommand.cs
+│   ├── UnloadWorkDllCommand.cs
+│   ├── AbracadabraCommand.cs (Proxy)
+│   ├── SetupCommand.cs (Proxy)
+│   └── ImportGeoJsonCommand.cs (Proxy)
+```
 
-Ist das Einbinden von UI oder UI-Events in die Arbeits-DLL sauber isoliert/abgekoppelt nach Unload?
+### Work-DLL
+```
+src/GeoJsonImporter.Work/Commands/
+├── AbracadabraWorkCommand.cs (echt)
+├── SetupWorkCommand.cs (echt)
+└── ImportGeoJsonWorkCommand.cs (echt)
+```
 
-Werden alle Methoden, die von der Arbeits-DLL stammen, nach Wechsel tatsächlich aus neuer DLL aufgerufen (Reflektion)?
+## 🎯 FAZIT
 
-Empfehlung:
-Mit dieser Checkliste kann Cursor.ai strukturiert prüfen, ob statt des Dummy-Loaders die richtige (containerisierte) DLL tatsächlich gewechselt und genutzt wird. Meist treten Fehler auf, wenn Dummy und Arbeits-DLL nicht klar getrennt sind oder wenn der Loader noch „Leichenreferenzen“ zur Arbeits-DLL hält.
+**Proxy-Commands gehören in die Loader-DLL!**
+- **App.cs** → **Loader-DLL Proxy-Commands**
+- **Proxy-Commands** → **WorkDllManager** → **Work-DLL echte Commands**
+- **Das ist die korrekte Hot Reload Architektur!**
+
+**WICHTIG: Verwende spezifische WorkDllManager-Methoden, keine generischen!**
+
+---
+*Erstellt nach der erfolgreichen Implementierung vom 19.12.2024*

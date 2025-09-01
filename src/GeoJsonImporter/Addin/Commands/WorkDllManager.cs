@@ -180,16 +180,16 @@ namespace GeoJsonImporter.Addin.Commands
         }
 
         /// <summary>
-        /// Führt UTM Grid Setup Command in der Work-DLL aus
+        /// Führt Abracadabra Command in der Work-DLL aus
         /// </summary>
-        public static Autodesk.Revit.UI.Result ExecuteUtmGridSetup(
+        public static Autodesk.Revit.UI.Result ExecuteAbracadabra(
             Autodesk.Revit.UI.ExternalCommandData commandData, 
             ref string message, 
             Autodesk.Revit.DB.ElementSet elements)
         {
             try
             {
-                HotReloadLogger.Info("🗺️ UTM Grid Setup Command aufgerufen");
+                HotReloadLogger.Info("🧙‍♂️ Abracadabra Command aufgerufen");
 
                 // Work-DLL laden falls nicht geladen
                 if (!IsWorkDllLoaded())
@@ -206,13 +206,13 @@ namespace GeoJsonImporter.Addin.Commands
                 var assembly = _workDllContext.Assemblies.FirstOrDefault();
                 if (assembly != null)
                 {
-                    // Nach UtmGridSetupWorkCommand suchen
+                    // Nach AbracadabraWorkCommand suchen
                     var commandType = assembly.GetTypes()
-                        .FirstOrDefault(t => t.Name == "UtmGridSetupWorkCommand");
+                        .FirstOrDefault(t => t.Name == "AbracadabraWorkCommand");
 
                     if (commandType != null)
                     {
-                        HotReloadLogger.Info($"UtmGridSetupWorkCommand gefunden: {commandType.FullName}");
+                        HotReloadLogger.Info($"AbracadabraWorkCommand gefunden: {commandType.FullName}");
                         
                         var commandInstance = Activator.CreateInstance(commandType);
                         var executeMethod = commandType.GetMethod("Execute");
@@ -221,19 +221,19 @@ namespace GeoJsonImporter.Addin.Commands
                         {
                             HotReloadLogger.Info("Execute-Methode wird aufgerufen...");
                             var result = executeMethod.Invoke(commandInstance, new object[] { commandData, message, elements });
-                            HotReloadLogger.Info($"UTM Grid Setup Command ausgeführt: {result}");
+                            HotReloadLogger.Info($"Abracadabra Command ausgeführt: {result}");
                             return (Autodesk.Revit.UI.Result)result;
                         }
                     }
                 }
 
-                HotReloadLogger.Error("UtmGridSetupWorkCommand nicht gefunden in Work-DLL");
+                HotReloadLogger.Error("AbracadabraWorkCommand nicht gefunden in Work-DLL");
                 return Autodesk.Revit.UI.Result.Failed;
             }
             catch (Exception ex)
             {
                 var realEx = ex.InnerException ?? ex;
-                HotReloadLogger.Error($"UTM Grid Setup Ausführung Fehler: {realEx.Message}", realEx);
+                HotReloadLogger.Error($"Abracadabra Ausführung Fehler: {realEx.Message}", realEx);
                 return Autodesk.Revit.UI.Result.Failed;
             }
         }

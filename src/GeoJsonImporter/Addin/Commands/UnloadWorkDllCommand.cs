@@ -2,7 +2,6 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using System;
-using System.Windows.Forms;
 
 namespace GeoJsonImporter.Addin.Commands
 {
@@ -13,31 +12,25 @@ namespace GeoJsonImporter.Addin.Commands
         {
             try
             {
-                // Delegiere an den WorkDllManager für Unload
+                // 🚀 Entlade Work-DLL über WorkDllManager
                 bool success = WorkDllManager.UnloadWorkDll();
                 
                 if (success)
                 {
-                    MessageBox.Show("✅ Work-DLL erfolgreich entladen!\n\n" +
-                        "Die Work-DLL ist jetzt freigegeben.\n" +
-                        "Du kannst jetzt ein neues Build machen!", 
-                        "Work-DLL Unload Erfolgreich", 
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    TaskDialog.Show("Hot Reload", "✅ Work-DLL erfolgreich entladen!");
                     return Result.Succeeded;
                 }
                 else
                 {
-                    MessageBox.Show("⚠️ Work-DLL Unload Fehler!\n\n" +
-                        "Siehe Log für Details.", 
-                        "Work-DLL Unload Fehler", 
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    message = "Fehler beim Entladen der Work-DLL";
+                    TaskDialog.Show("Hot Reload Fehler", "❌ Work-DLL konnte nicht entladen werden!");
                     return Result.Failed;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"❌ Fehler beim Work-DLL Unload:\n\n{ex.Message}", 
-                    "Unload Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                message = $"UnloadWorkDll Fehler: {ex.Message}";
+                TaskDialog.Show("UnloadWorkDll Fehler", $"❌ Fehler beim Entladen der Work-DLL:\n\n{ex.Message}");
                 return Result.Failed;
             }
         }
