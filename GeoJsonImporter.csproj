@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <EnableHotReload>true</EnableHotReload>
+    <DebugType>portable</DebugType>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <OutputPath>$(SolutionDir)Deploy\</OutputPath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>latest</LangVersion>
+    <OutputType>Library</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="RevitAPI">
+      <HintPath>C:\Program Files\Autodesk\Revit 2026\RevitAPI.dll</HintPath>
+      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="RevitAPIUI">
+      <HintPath>C:\Program Files\Autodesk\Revit 2026\RevitAPIUI.dll</HintPath>
+      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GeoJSON.Net" Version="1.4.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <!-- Post-Build Events für automatisches Deployment -->
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <PropertyGroup>
+      <RevitAddinsPath>C:\ProgramData\Autodesk\Revit\Addins\2026\</RevitAddinsPath>
+      <TargetAddinPath>$(RevitAddinsPath)GeoJsonImporter.addin</TargetAddinPath>
+      <TargetDllPath>$(RevitAddinsPath)GeoJsonImporter.dll</TargetDllPath>
+      <TargetPdbPath>$(RevitAddinsPath)GeoJsonImporter.pdb</TargetPdbPath>
+    </PropertyGroup>
+    
+    <!-- Plugin-Dateien kopieren -->
+    <Message Text="Copying corrected .addin file to $(TargetAddinPath)" Importance="high" />
+    <Copy SourceFiles="$(ProjectDir)assets\GeoJsonImporter.addin" DestinationFiles="$(TargetAddinPath)" />
+    <Message Text="Copying $(TargetPath) to $(TargetDllPath)" Importance="high" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDllPath)" />
+    <Message Text="Copying $(TargetDir)$(TargetName).pdb to $(TargetPdbPath)" Importance="high" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFiles="$(TargetPdbPath)" />
+    
+    <!-- Hinweis: NuGet-Abhängigkeiten müssen manuell kopiert werden -->
+    <Message Text="Note: GeoJSON.Net.dll and Newtonsoft.Json.dll must be manually copied to Revit AddIns directory" Importance="high" />
+    <Message Text="✅ Hot Reload Setup: .addin file now points to correct Revit AddIns directory!" Importance="high" />
+  </Target>
+</Project>

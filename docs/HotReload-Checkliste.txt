@@ -1,0 +1,65 @@
+Hier ist eine umfassende Checkliste für Cursor.ai, um zu prüfen, ob der Loader-Ansatz zum Hot-Swapping von containerisierten DLLs in Revit korrekt implementiert ist. Die Liste hilft, typische Fehlerquellen zu identifizieren und zeigt, worauf bei einer funktionierenden Lösung zu achten ist.
+
+Hot-Swap Loader-Architektur – Prüf- und Fehler-Checkliste
+1. Architektur-Validierung
+Wird ein separates Loader-Plugin als Dummy genutzt, das selbst keine nutzerseitige Logik enthält und immer von Revit geladen bleibt?
+
+Ist die Hauptfunktionalität tatsächlich ausgelagert in eine „Arbeits-DLL“, die nur vom Loader dynamisch geladen wird?
+
+2. Container-Kontext
+Wird die Arbeits-DLL ausschließlich in einem AssemblyLoadContext mit aktiviertem Unload geladen (Parameter isCollectible: true)?
+
+Besteht eine klare Trennung zwischen Loader und Arbeits-DLL hinsichtlich Abhängigkeiten und Verweisen?
+
+3. Lade-/Wechsel-Logik
+Gibt es eine explizite Logik (z. B. Button, Command), die:
+
+Den aktuellen Context/Arbeits-DLL entlädt (Unload + GC.Collect + GC.WaitForPendingFinalizers)?
+
+Die neue Arbeits-DLL prüft (Datum, Version) und dann lädt?
+
+Wird wirklich versucht, die Arbeits-DLL zu laden/wechseln – oder wird weiterhin nur die Dummy-Loader-DLL neu gebaut/kopiert?
+
+4. Isolation & Ressourcen
+Hält der Loader keine Verweise (Events, Delegates, Objekte) zu der Arbeits-DLL, nachdem sie entladen werden soll?
+
+Werden alle von der Arbeits-DLL allocierten Ressourcen vollständig disposed (inkl. UI, EventHandler, Streams)?
+
+5. Kopierbarkeit & Überschreibbarkeit
+Kann die Arbeits-DLL nach Unload im Dateisystem frei überschrieben werden (kein Lock durch Revit oder Loader)?
+
+Bleibt die Loader-DLL dauerhaft im Speicher, aber fungiert nur als „Container“, nicht als reguläre Logik?
+
+6. Sichtbarer Erfolg des Hot-Swap
+Nach einer Änderung und Build der Arbeits-DLL ? wird die neue Version beim Hot-Reload tatsächlich geladen und verwendet (z. B. neue MessageBox, Methoden)?
+
+Zeigt ein Debuginfo/Testmethoden (z. B. Zeitstempel/Version), dass die geladene Logik nach Hot-Swap wirklich neu ist?
+
+Bleibt beim Versuch, die Dummy/Loader-DLL zu ersetzen, weiterhin ein Fehler/Lock im Dateisystem bestehen?
+
+7. Typische Fehlerquellen
+Loader hält noch Referenzen/Handles zu alter Arbeits-DLL ? DLL kann nicht entladen werden
+
+Arbeits-DLL wird nicht in einen „collectible“ Context geladen ? Unload funktioniert nicht
+
+Loader und Arbeits-DLL sind nicht ausreichend getrennt ? direkte Lock auf beide DLLs nach dem Load
+
+Kopierlogik zielt auf Dummy-Loader-DLL statt auf Arbeits-DLL (falscher Pfad, falscher Filehandle)
+
+Unvollständige Dispose-/Unload-Logik (Events, BackgroundWorker, Streams usw. bleiben aktiv)
+
+Nach Build wird versehentlich die Loader-DLL ersetzt/kopiert, anstatt die Arbeits-DLL im Container
+
+Was Cursor.ai noch prüfen kann
+Werden beim Hot-Reload-Kontext Gültigkeit und Version der geladene DLL kontrolliert?
+
+Ist die Dummy-Loader-DLL nach dem Build immer noch im Originalstatus – oder wird durch den Prozess ein Fehler/Missverständnis ausgelöst?
+
+Gibt es ein Logging (z. B. Debug.Log), das zeigt, ob Kontext-Unload und Reload wirklich gelingt?
+
+Ist das Einbinden von UI oder UI-Events in die Arbeits-DLL sauber isoliert/abgekoppelt nach Unload?
+
+Werden alle Methoden, die von der Arbeits-DLL stammen, nach Wechsel tatsächlich aus neuer DLL aufgerufen (Reflektion)?
+
+Empfehlung:
+Mit dieser Checkliste kann Cursor.ai strukturiert prüfen, ob statt des Dummy-Loaders die richtige (containerisierte) DLL tatsächlich gewechselt und genutzt wird. Meist treten Fehler auf, wenn Dummy und Arbeits-DLL nicht klar getrennt sind oder wenn der Loader noch „Leichenreferenzen“ zur Arbeits-DLL hält.

@@ -1,0 +1,41 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [13.3777, 52.5163],
+          [13.3787, 52.5163],
+          [13.3787, 52.5173],
+          [13.3777, 52.5173],
+          [13.3777, 52.5163]
+        ]]
+      },
+      "properties": {
+        "name": "Beispiel Gebäude",
+        "height": 25.5,
+        "material": "Beton",
+        "type": "Wohngebäude",
+        "floors": 8
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [13.3777, 52.5163],
+          [13.3787, 52.5163],
+          [13.3787, 52.5173]
+        ]
+      },
+      "properties": {
+        "name": "Beispiel Weg",
+        "width": 3.0,
+        "type": "Fußweg"
+      }
+    }
+  ]
+}
